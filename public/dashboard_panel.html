@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>CMS V5.0 - CRM</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <style>
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 40px; }
+        .container { max-width: 1000px; margin: 0 auto; border: 1px solid #333; padding: 30px; background: #000; position: relative; }
+        
+        /* TABS NAVIGATION */
+        .tabs-nav { display: flex; border-bottom: 1px solid #333; margin-bottom: 30px; }
+        .tab-btn { 
+            flex: 1; padding: 15px; background: #0a0a0a; border: none; border-right: 1px solid #333; 
+            color: #666; cursor: pointer; font-weight: bold; font-size: 1.1rem; 
+        }
+        .tab-btn:hover { background: #111; color: #fff; }
+        .tab-btn.active { background: #00ff41; color: #000; }
+
+        /* General Inputs */
+        input, button, select, textarea { 
+            background: #111; border: 1px solid #333; color: #fff; 
+            padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus { border-color: #00ff41; outline: none; }
+        textarea { height: 100px; resize: vertical; }
+
+        button { cursor: pointer; font-weight: bold; text-transform: uppercase; background: #222; transition: 0.2s; }
+        button:hover { background: #00ff41; color: #000; }
+        
+        /* Product Item Styles */
+        .product-item { border: 1px solid #222; margin-bottom: 5px; background: #0a0a0a; padding: 10px; display: flex; justify-content: space-between; align-items: center; cursor: grab; }
+        .thumb { height: 50px; width: 40px; object-fit: cover; margin-right: 15px; border: 1px solid #333; }
+        .badge-drop { color: orange; border: 1px solid orange; padding: 2px 5px; font-size: 0.7rem; margin-left: 5px; }
+
+        /* === ORDERS STYLES === */
+        .order-card {
+            border: 1px solid #333; margin-bottom: 20px; background: #0a0a0a;
+        }
+        .order-header {
+            background: #111; padding: 10px 20px; border-bottom: 1px solid #333;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .order-body {
+            padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+        .order-info h4 { margin: 0 0 10px 0; color: #888; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .order-line { font-size: 0.9rem; margin-bottom: 5px; color: #ccc; }
+        
+        .order-items-list { max-height: 200px; overflow-y: auto; }
+        .order-item-row { display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        .oi-thumb { width: 40px; height: 50px; object-fit: cover; border: 1px solid #333; }
+        
+        .status-badge { padding: 5px 10px; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; }
+        .st-new { background: #ff0000; color: #fff; }
+        .st-sent { background: #0088ff; color: #fff; }
+        .st-done { background: #00ff41; color: #000; }
+        .st-cancelled { background: #555; color: #ccc; text-decoration: line-through; }
+
+        .order-actions { padding: 15px; border-top: 1px solid #333; display: flex; gap: 10px; justify-content: flex-end; }
+        .action-btn { width: auto; padding: 5px 15px; font-size: 0.8rem; }
+        
+        /* Hide/Show Logic */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .vis-group { display: flex; gap: 20px; border: 1px solid #333; padding: 10px; margin-top: 10px; background: #0a0a0a; }
+        .vis-wrapper { display: flex; align-items: center; gap: 10px; }
+        .vis-wrapper input { width: auto; margin: 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('products')">PRODUCTS MANAGER</button>
+        <button class="tab-btn" onclick="switchTab('orders')">ORDERS DATABASE</button>
+    </div>
+
+    <div id="tab-products" class="tab-content active">
+        <div class="coll-manager" style="border: 1px solid #333; padding: 15px; margin-bottom: 30px; background: #0a0a0a;">
+            <h3 style="margin-top:0;">/// COLLECTION MANAGER ///</h3>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="newCollInput" placeholder="NEW COLLECTION NAME">
+                <button onclick="addCollection()" style="width:auto;">ADD</button>
+            </div>
+            <div id="collectionsList" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
+        </div>
+
+        <h1 id="formTitle">/// NEW ITEM ///</h1>
+        
+        <form id="productForm">
+            <input type="hidden" id="editId" name="id">
+
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 1;">
+                    <label>COLLECTION:</label>
+                    <select name="category" id="inpCategory"></select>
+                </div>
+                <div style="flex: 1; display:flex; align-items:flex-end;">
+                     <div class="vis-group" style="width:100%; height: 42px; box-sizing: border-box; align-items:center;">
+                        <div class="vis-wrapper">
+                            <input type="checkbox" id="inpVisible" name="isVisible" checked>
+                            <label for="inpVisible" style="margin:0; font-size: 0.9rem; color: #fff;">VISIBLE</label>
+                        </div>
+                        <div style="width:1px; height:20px; background:#333;"></div>
+                        <div class="vis-wrapper">
+                            <input type="checkbox" id="inpDrop" name="isDrop">
+                            <label for="inpDrop" style="margin:0; font-size: 0.9rem; color: orange;">DROP MODE</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 2;">
+                    <label>TITLE:</label>
+                    <input type="text" name="title" id="inpTitle" placeholder="ITEM NAME" required>
+                </div>
+                <div style="flex: 1;">
+                    <label>REF:</label>
+                    <input type="text" name="ref" id="inpRef" placeholder="REF-001" required>
+                </div>
+                <div style="flex: 1;">
+                    <label>PRICE:</label>
+                    <input type="text" name="price" id="inpPrice" placeholder="$100.00" required>
+                </div>
+            </div>
+
+            <label>DESCRIPTION:</label>
+            <textarea name="description" id="inpDesc" placeholder="Enter product details..."></textarea>
+
+            <label>COLORS (Optional):</label>
+            <input type="text" name="colors" id="inpColors" placeholder="Leave empty if none">
+
+            <label>STOCK (S:10, M:5) - Optional:</label>
+            <input type="text" id="inpStockRaw" placeholder="Leave empty if none">
+
+            <label>IMAGES:</label>
+            <input type="file" name="images" id="inpImages" accept="image/*" multiple required>
+            <small id="imgHint" style="display:none; color:#888;">Leave empty to keep current</small>
+            
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button type="submit" id="submitBtn">UPLOAD DATA</button>
+                <button type="button" id="cancelBtn" style="display:none; background:#333;">CANCEL</button>
+            </div>
+        </form>
+
+        <br><hr style="border-color:#333"><br>
+        <button id="saveOrderBtn" onclick="saveOrder()" style="display:none; margin-bottom: 20px;">SAVE SORT ORDER</button>
+        <div id="itemsList"></div>
+    </div>
+
+    <div id="tab-orders" class="tab-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1>/// INCOMING ORDERS ///</h1>
+            <button onclick="loadOrders()" style="width:auto;">REFRESH</button>
+        </div>
+        <div id="ordersList"></div>
+    </div>
+
+</div>
+
+<script>
+    // === TABS LOGIC ===
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        // Находим кнопку и делаем активной (простой хак по тексту)
+        const btns = document.querySelectorAll('.tab-btn');
+        if(tabName === 'products') btns[0].classList.add('active');
+        if(tabName === 'orders') {
+            btns[1].classList.add('active');
+            loadOrders(); // Загружаем заказы при переключении
+        }
+    }
+
+    // === PRODUCTS LOGIC (OLD) ===
+    const form = document.getElementById('productForm');
+    const list = document.getElementById('itemsList');
+    const collListDiv = document.getElementById('collectionsList');
+    const catSelect = document.getElementById('inpCategory');
+    const inpStock = document.getElementById('inpStockRaw');
+    const saveOrderBtn = document.getElementById('saveOrderBtn');
+    let isEditMode = false;
+
+    new Sortable(list, {
+        animation: 150, handle: '.product-item', ghostClass: 'sortable-ghost',
+        onEnd: function() { saveOrderBtn.style.display = 'block'; }
+    });
+
+    async function loadCollections() {
+        const res = await fetch('/api/collections');
+        const collections = await res.json();
+        collListDiv.innerHTML = ''; catSelect.innerHTML = ''; 
+        const noCatOpt = document.createElement('option'); noCatOpt.value = ""; noCatOpt.innerText = "NO COLLECTION / NONE"; catSelect.appendChild(noCatOpt);
+        collections.forEach(c => {
+            const tag = document.createElement('div'); tag.className = 'coll-tag'; 
+            tag.style.background="#111"; tag.style.border="1px solid #444"; tag.style.padding="5px"; tag.style.fontSize="0.8rem";
+            tag.innerHTML = `${c.title} <button onclick="deleteColl(${c.id})" style="width:auto; padding:0 5px; margin-left:5px; font-size:10px;">X</button>`; 
+            collListDiv.appendChild(tag);
+            const opt = document.createElement('option'); opt.value = c.title; opt.innerText = c.title; catSelect.appendChild(opt);
+        });
+    }
+
+    async function addCollection() {
+        const title = document.getElementById('newCollInput').value; if (!title) return;
+        await fetch('/api/collections', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({title}) });
+        document.getElementById('newCollInput').value = ''; loadCollections();
+    }
+    async function deleteColl(id) { if(!confirm('DELETE COLLECTION?')) return; await fetch(`/api/collections/${id}`, { method: 'DELETE' }); loadCollections(); }
+
+    async function loadItems() {
+        const res = await fetch('/api/products');
+        const products = await res.json();
+        list.innerHTML = '';
+        products.forEach(p => {
+            const mainImg = p.images[0] || 'img/placeholder.jpg';
+            const catLabel = p.category || 'NO CAT';
+            const dropBadge = p.isDrop ? '<span class="badge-drop">DROP SOON</span>' : '';
+            const div = document.createElement('div');
+            div.className = `product-item ${!p.isVisible ? 'hidden' : ''}`;
+            div.setAttribute('data-id', p.id); 
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; pointer-events:none;">
+                    <img src="${mainImg}" class="thumb">
+                    <div><b>${p.title}</b> ${dropBadge} <small>[${catLabel}]</small><br><small style="color:#888;">${p.ref}</small></div>
+                </div>
+                <div class="btn-group" style="display:flex; gap:10px;">
+                    <button onclick='startEdit(${JSON.stringify(p)})' style="background:#333; width:auto; padding:5px 10px;">EDIT</button>
+                    <button onclick="deleteItem(${p.id})" style="background:#500; width:auto; padding:5px 10px;">X</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let stockArray = [];
+        if (inpStock.value.trim()) {
+             const rawStock = inpStock.value.split(',');
+             stockArray = rawStock.map(item => {
+                const parts = item.split(':');
+                return { size: parts[0].trim().toUpperCase(), qty: parseInt(parts[1] || 0) };
+            });
+        }
+        const formData = new FormData(form);
+        formData.append('stock', JSON.stringify(stockArray));
+        formData.set('isVisible', document.getElementById('inpVisible').checked);
+        formData.set('isDrop', document.getElementById('inpDrop').checked);
+        const url = isEditMode ? `/api/products/${document.getElementById('editId').value}` : '/api/products';
+        const method = isEditMode ? 'PUT' : 'POST';
+        const res = await fetch(url, { method: method, body: formData });
+        if (res.ok) { resetForm(); loadItems(); } else { alert('Error'); }
+    });
+
+    window.startEdit = (p) => {
+        isEditMode = true;
+        document.getElementById('formTitle').innerText = `/// EDITING ${p.ref} ///`;
+        document.getElementById('submitBtn').innerText = "SAVE CHANGES";
+        document.getElementById('cancelBtn').style.display = "block";
+        document.getElementById('inpImages').required = false;
+        document.getElementById('imgHint').style.display = "block";
+        document.getElementById('editId').value = p.id;
+        document.getElementById('inpTitle').value = p.title;
+        document.getElementById('inpRef').value = p.ref;
+        document.getElementById('inpPrice').value = p.price;
+        document.getElementById('inpDesc').value = p.description || ''; 
+        document.getElementById('inpColors').value = p.colors.join(', ');
+        document.getElementById('inpCategory').value = p.category || ""; 
+        document.getElementById('inpVisible').checked = p.isVisible;
+        document.getElementById('inpDrop').checked = p.isDrop;
+        if (p.stock && p.stock.length > 0) inpStock.value = p.stock.map(s => `${s.size}:${s.qty}`).join(', ');
+        else inpStock.value = '';
+        window.scrollTo(0,0);
+    };
+
+    async function saveOrder() {
+        const itemDivs = document.querySelectorAll('.product-item');
+        const newOrder = Array.from(itemDivs).map(div => div.getAttribute('data-id'));
+        await fetch('/api/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ order: newOrder }) });
+        saveOrderBtn.style.display = 'none'; alert('ORDER SAVED');
+    }
+    document.getElementById('cancelBtn').onclick = resetForm;
+    function resetForm() {
+        isEditMode = false; form.reset();
+        document.getElementById('formTitle').innerText = "/// NEW ENTRY ///";
+        document.getElementById('submitBtn').innerText = "UPLOAD DATA";
+        document.getElementById('cancelBtn').style.display = "none";
+        document.getElementById('imgHint').style.display = "none";
+        document.getElementById('inpImages').required = true;
+    }
+    window.deleteItem = async (id) => { if(confirm('DELETE?')) { await fetch(`/api/products/${id}`, { method: 'DELETE' }); loadItems(); } };
+
+    // === ORDERS LOGIC (NEW) ===
+    async function loadOrders() {
+        const res = await fetch('/api/orders');
+        const orders = await res.json();
+        const container = document.getElementById('ordersList');
+        container.innerHTML = '';
+
+        if(orders.length === 0) {
+            container.innerHTML = '<div style="color:#666; padding:20px; border:1px solid #333;">NO ORDERS YET</div>';
+            return;
+        }
+
+        orders.forEach(o => {
+            const cust = o.customer;
+            let statusClass = 'st-new';
+            if(o.status === 'sent') statusClass = 'st-sent';
+            if(o.status === 'done') statusClass = 'st-done';
+            if(o.status === 'cancelled') statusClass = 'st-cancelled';
+
+            // Генерация HTML для списка товаров внутри заказа
+            const itemsHtml = o.items.map(i => `
+                <div class="order-item-row">
+                    <img src="${i.image}" class="oi-thumb">
+                    <div>
+                        <div style="font-weight:bold; font-size:0.9rem;">${i.title}</div>
+                        <div style="font-size:0.8rem; color:#888;">${i.size} / ${i.color} x ${i.qty}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            const dateStr = new Date(o.date).toLocaleString();
+
+            const card = document.createElement('div');
+            card.className = 'order-card';
+            card.innerHTML = `
+                <div class="order-header">
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <span style="font-size:1.2rem; font-weight:bold;">#${o.id}</span>
+                        <span style="color:#666;">${dateStr}</span>
+                        <span class="status-badge ${statusClass}">${o.status.toUpperCase()}</span>
+                    </div>
+                    <div style="font-size:1.2rem; font-weight:bold;">${o.total}</div>
+                </div>
+                
+                <div class="order-body">
+                    <div class="order-info">
+                        <h4>CUSTOMER</h4>
+                        <div class="order-line"><b>Name:</b> ${cust.name}</div>
+                        <div class="order-line"><b>Phone:</b> ${cust.phone}</div>
+                        <div class="order-line"><b>Email:</b> ${cust.email}</div>
+                        <div class="order-line"><b>City:</b> ${cust.city}</div>
+                        <div class="order-line"><b>Addr:</b> ${cust.address}</div>
+                    </div>
+                    
+                    <div class="order-info">
+                        <h4>ITEMS</h4>
+                        <div class="order-items-list">
+                            ${itemsHtml}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-actions">
+                    <button class="action-btn" style="background:#333;" onclick="updateStatus(${o.id}, 'new')">MARK NEW</button>
+                    <button class="action-btn" style="background:#0044aa;" onclick="updateStatus(${o.id}, 'sent')">MARK SENT</button>
+                    <button class="action-btn" style="background:#006622;" onclick="updateStatus(${o.id}, 'done')">MARK DONE</button>
+                    <button class="action-btn" style="background:#555;" onclick="updateStatus(${o.id}, 'cancelled')">MARK CANCELLED</button> 
+                    <div style="width:1px; background:#333; margin:0 10px;"></div>
+                    <button class="action-btn" style="background:#500;" onclick="deleteOrder(${o.id})">DELETE</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    async function updateStatus(id, status) {
+        await fetch(`/api/orders/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ status })
+        });
+        loadOrders();
+    }
+
+    async function deleteOrder(id) {
+        if(!confirm('DELETE ORDER PERMANENTLY?')) return;
+        await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+        loadOrders();
+    }
+
+    // INIT
+    loadCollections();
+    loadItems();
+</script>
+</body>
+</html>

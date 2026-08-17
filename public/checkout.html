@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTI-NASTYA | CHECKOUT</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Специфичные стили для чекаута */
+        body { padding-top: 100px; padding-bottom: 50px; }
+        
+        .checkout-container {
+            max-width: 1100px; margin: 0 auto;
+            display: grid; grid-template-columns: 1.5fr 1fr; gap: 50px;
+            padding: 20px;
+        }
+
+        /* Левая колонка - Форма */
+        .form-section h2 { border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; font-size: 1.2rem; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 5px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 12px;
+            background: #0a0a0a; border: 1px solid #333; color: #fff;
+            font-family: 'Courier New', monospace; box-sizing: border-box;
+        }
+        .form-group input:focus { border-color: #fff; outline: none; }
+        
+        /* Правая колонка - Сумма заказа */
+        .order-summary {
+            background: #0a0a0a; border: 1px solid #333; padding: 30px;
+            height: fit-content;
+        }
+        
+        .summary-item {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #222; padding: 15px 0; font-size: 0.9rem;
+        }
+        .summary-thumb { width: 50px; height: 60px; object-fit: cover; margin-right: 15px; border: 1px solid #333; }
+        .summary-info { flex: 1; }
+        .summary-title { font-weight: bold; }
+        .summary-meta { font-size: 0.8rem; color: #666; }
+
+        .total-row {
+            display: flex; justify-content: space-between;
+            margin-top: 20px; padding-top: 20px; border-top: 2px solid #fff;
+            font-size: 1.5rem; font-weight: bold;
+        }
+
+        .place-order-btn {
+            width: 100%; background: #fff; color: #000;
+            padding: 15px; border: none; font-weight: bold;
+            text-transform: uppercase; cursor: pointer; margin-top: 20px;
+            transition: 0.2s;
+        }
+        .place-order-btn:hover { background: #ccc; }
+
+        @media (max-width: 768px) {
+            .checkout-container { grid-template-columns: 1fr; }
+            .order-summary { order: -1; margin-bottom: 30px; } 
+        }
+    </style>
+</head>
+<body class="checkout-page">
+
+    <div class="cursor-data">
+        <div class="cursor-crosshair"></div>
+        <div class="cursor-xy">X: 000 <br> Y: 000</div>
+    </div>
+    
+    <header class="main-header">
+        <div class="nav-group left">
+            <a href="shop.html" class="nav-btn">&lt; BACK TO SHOP</a>
+        </div>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="logo.png" alt="ANTI-NASTYA" class="site-logo">
+            </a>
+        </div>
+        <div class="nav-group right">
+            </div>
+    </header>
+
+    <div class="checkout-container" id="checkoutApp">
+        
+        <div class="form-section">
+            <h2>SHIPPING DETAILS</h2>
+            <form id="checkoutForm">
+                <div class="form-group">
+                    <label>FULL NAME</label>
+                    <input type="text" name="name" placeholder="ALEX MERCER" required>
+                </div>
+                <div class="form-group">
+                    <label>EMAIL</label>
+                    <input type="email" name="email" placeholder="ALEX@GMAIL.COM" required>
+                </div>
+                <div class="form-group">
+                    <label>PHONE</label>
+                    <input type="text" name="phone" placeholder="+380 00 000 0000" required>
+                </div>
+                <div class="form-group">
+                    <label>CITY</label>
+                    <input type="text" name="city" placeholder="KYIV" required>
+                </div>
+                <div class="form-group">
+                    <label>DELIVERY ADDRESS / NOVA POSHTA</label>
+                    <input type="text" name="address" placeholder="NP #45 OR STREET NAME" required>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <h2>PAYMENT METHOD</h2>
+                    <div style="padding: 15px; border: 1px solid #333; color: #888;">
+                        CASH ON DELIVERY (Оплата при получении)
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="order-summary">
+            <h2>YOUR ORDER</h2>
+            <div id="checkout-items">
+                </div>
+            
+            <div class="total-row">
+                <span>TOTAL</span>
+                <span id="checkout-total">0₴</span>
+            </div>
+
+            <button class="place-order-btn" onclick="submitOrder()">CONFIRM ORDER</button>
+        </div>
+
+    </div>
+
+    <script src="main.js"></script> 
+    
+    <script>
+        
+        // 1. ФУНКЦИЯ ЗАГРУЗКИ КОРЗИНЫ И РАСЧЕТА СУММЫ
+        function loadCheckout() {
+            const raw = localStorage.getItem('myShopCart');
+            const container = document.getElementById('checkout-items');
+            const totalEl = document.getElementById('checkout-total');
+            let total = 0;
+
+            container.innerHTML = '';
+            
+            // Попытка парсинга данных
+            if(raw) {
+                try {
+                    cart = JSON.parse(raw);
+                } catch (e) {
+                    console.error("Error parsing cart data:", e);
+                    localStorage.removeItem('myShopCart'); 
+                    cart = [];
+                }
+            }
+
+            // Проверка на пустую корзину
+            if(cart.length === 0) {
+                // Мягкое перенаправление, чтобы не было ошибки при пустой корзине
+                document.getElementById('checkoutApp').innerHTML = `
+                    <div style="text-align:center; padding: 100px 0;">
+                        <h1 style="font-size: 3rem;">YOUR CART IS EMPTY</h1>
+                        <p>Redirecting to shop...</p>
+                    </div>
+                `;
+                setTimeout(() => { window.location.href = 'shop.html'; }, 2000);
+                return;
+            }
+
+            // Итерация по товарам и расчет
+            cart.forEach(item => {
+                // --- УЛУЧШЕННЫЙ ПАРСИНГ ЦЕНЫ ---
+                // Удаляем все символы, кроме цифр и точки. 
+                const cleanPriceString = (item.price || '0').replace(/[^0-9.]/g, '');
+                const priceNumber = parseFloat(cleanPriceString) || 0; 
+                const quantity = parseInt(item.qty) || 1;
+                
+                // Расчет
+                const itemSubtotal = priceNumber * quantity;
+                total += itemSubtotal;
+                
+                const itemTotalFormatted = itemSubtotal.toFixed(0) + '₴'; // Отображение
+                
+                container.innerHTML += `
+                    <div class="summary-item">
+                        <div style="display:flex; align-items:center;">
+                            <img src="${item.image}" class="summary-thumb">
+                            <div>
+                                <div class="summary-title">${item.title}</div>
+                                <div class="summary-meta">${item.size} / ${item.color} x ${quantity}</div>
+                            </div>
+                        </div>
+                        <div>${itemTotalFormatted}</div>
+                    </div>
+                `;
+            });
+
+            // --- ФИНАЛЬНАЯ СТОИМОСТЬ ---
+            totalEl.innerText = total.toFixed(0) + '₴'; 
+        }
+
+        // 2. ОТПРАВКА ЗАКАЗА
+        async function submitOrder() {
+            const form = document.getElementById('checkoutForm');
+            
+            if (cart.length === 0) {
+                alert('Корзина пуста. Невозможно оформить заказ.');
+                window.location.href = 'shop.html';
+                return;
+            }
+
+            if(!form.checkValidity()) {
+                alert('ПОЖАЛУЙСТА, ЗАПОЛНИТЕ ВСЕ ПОЛЯ');
+                return;
+            }
+
+            const formData = new FormData(form);
+            const customerData = {};
+            formData.forEach((value, key) => customerData[key] = value);
+
+            // Очищаем тотал от символов для сервера
+            const totalAmountRaw = document.getElementById('checkout-total').innerText
+                                        .replace(/[^0-9.]/g, '');
+
+            const orderPayload = {
+                customer: customerData,
+                items: cart,
+                total: totalAmountRaw
+            };
+
+            const btn = document.querySelector('.place-order-btn');
+            btn.innerText = "PROCESSING...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(orderPayload)
+                });
+
+                if(res.ok) {
+                    const data = await res.json();
+                    const orderId = data.orderId;
+                    
+                    localStorage.removeItem('myShopCart');
+                    
+                    // ПОКАЗЫВАЕМ УСПЕХ И ID
+                    document.getElementById('checkoutApp').innerHTML = `
+                        <div style="text-align:center; padding: 100px 0;">
+                            <h1 style="font-size: 3rem;">THANK YOU</h1>
+                            <p style="font-size: 1.2rem; color: #00ff41;">
+                                YOUR ORDER ID IS: <b>${orderId}</b>
+                            </p>
+                            <p style="color: #ccc;">(Please save this number to track your order on the Status page.)</p>
+                            <p style="margin-top: 30px;">WE WILL CONTACT YOU SHORTLY, and your ID has been sent to your email.</p>
+                            <br><br>
+                            <a href="shop.html" class="place-order-btn" style="text-decoration:none; display:inline-block; width:auto; padding: 15px 40px;">BACK TO SHOP</a>
+                        </div>
+                    `;
+                    cart = []; 
+                } else {
+                    alert('СЕРВЕРНАЯ ОШИБКА: Заказ не сохранен. Код: ' + res.status);
+                    btn.innerText = "CONFIRM ORDER";
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                console.error(e);
+                alert('ОШИБКА СЕТИ. Проверьте соединение.');
+                btn.innerText = "CONFIRM ORDER";
+                btn.disabled = false;
+            }
+        }
+
+        // --- ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ---
+        loadCheckout();
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTI-NASTYA CLUB | SHOP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="shop-page">
+
+    <div class="noise-overlay"></div>
+    <div class="cursor-data">
+        <div class="cursor-crosshair"></div>
+        <div class="cursor-xy">X: 000 <br> Y: 000</div>
+    </div>
+
+    <header class="main-header">
+        <div class="nav-group left">
+            <a href="shop.html" class="nav-btn active">SHOP</a>
+            <a href="#" class="nav-btn">LOOKBOOK</a>
+        </div>
+        
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="logo.png" alt="Logo" class="site-logo">
+            </a>
+        </div>
+        
+        <div class="nav-group right">
+            <a href="#" class="nav-btn">ABOUT</a>
+            <a href="#" class="nav-btn" id="nav-cart-btn" onclick="toggleCart(); return false;">CART (0)</a>
+        </div>
+    </header>
+
+    <div class="category-filters"></div>
+
+    <main class="shop-grid" id="shop-container">
+        </main>
+
+    <script src="main.js"></script>
+
+    <div class="cart-overlay-bg" id="cart-overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <span>YOUR CART (<span id="cart-count-header">0</span>)</span>
+            <button class="close-cart" onclick="toggleCart()">×</button>
+        </div>
+        
+        <div class="cart-items" id="cart-items-container">
+            </div>
+
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>TOTAL:</span>
+                <span id="cart-total-price">0₴</span>
+            </div>
+            <button class="checkout-btn" onclick="window.location.href='checkout.html'">CHECKOUT</button>
+        </div>
+    </div>
+</body>
+</html>

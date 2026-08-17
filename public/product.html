@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTI-NASTYA CLUB | LOADING...</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Стили специально для страницы товара */
+        
+        /* Мини-галерея под главным фото */
+        .gallery-thumbs {
+            display: flex; 
+            gap: 10px; 
+            margin-top: 20px; 
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .thumb-img {
+            width: 60px; 
+            height: 80px; 
+            object-fit: cover; 
+            border: 1px solid #333; 
+            cursor: none; 
+            transition: 0.2s;
+            opacity: 0.6;
+        }
+        
+        /* При наведении или активе */
+        .thumb-img:hover, .thumb-img.active {
+            border-color: #fff; 
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        /* Отступы для блоков опций */
+        .option-group { margin-bottom: 25px; }
+        
+        /* Скрываем блоки по умолчанию, пока JS не проверит данные */
+        #colors-block, #sizes-block { display: none; }
+    </style>
+</head>
+<body class="product-page">
+
+    <div class="noise-overlay"></div>
+    <div class="vignette"></div>
+
+    <div class="cursor-data">
+        <div class="cursor-crosshair"></div>
+        <div class="cursor-xy">X: 000 <br> Y: 000</div>
+    </div>
+
+    <header class="main-header">
+        <div class="nav-group left">
+            <a href="shop.html" class="nav-btn">&lt; BACK TO SHOP</a>
+        </div>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="logo.png" alt="Logo" class="site-logo">
+            </a>
+        </div>
+        <div class="nav-group right">
+            <a href="#" class="nav-btn" id="nav-cart-btn" onclick="toggleCart(); return false;">CART (0)</a>
+        </div>
+    </header>
+
+    <main class="product-detail-container">
+        
+        <div class="product-visual">
+            <div style="width: 100%; text-align: center; max-width: 600px;">
+                <img id="p-image" src="" alt="" class="main-product-img">
+                
+                <div id="p-gallery" class="gallery-thumbs"></div>
+            </div>
+            
+            <div class="visual-decor">
+                <span>IMG_RAW_001</span>
+                <span>ISO 400</span>
+            </div>
+        </div>
+
+        <div class="product-data">
+            
+            <div class="p-header">
+                <h1 id="p-title" class="p-title">LOADING DATA...</h1>
+                <div id="p-price" class="p-price">...</div>
+            </div>
+
+            <div class="p-description"></div>
+
+            <div class="p-options option-group" id="colors-block">
+                <div class="option-label">SELECT COLOR:</div>
+                <div class="size-grid" id="colors-grid"></div>
+            </div>
+
+            <div class="p-options option-group" id="sizes-block">
+                <div class="option-label">SELECT SIZE:</div>
+                <div class="size-grid" id="sizes-grid"></div>
+            </div>
+
+            <div class="p-actions">
+                <button class="add-to-cart-btn" onclick="addToCart()">
+                    <span>ADD TO CART</span>
+                    <span class="p-price-display">→</span>
+                </button>
+            </div>
+
+            <div class="p-footer">
+                <span id="p-ref">REF: ...</span>
+                <span>IN STOCK</span>
+            </div>
+        </div>
+    </main>
+
+    <script src="main.js"></script>
+    
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        if (productId) {
+            fetch(`/api/products/${productId}`)
+                .then(res => res.json())
+                .then(data => {
+                    // 1. ТЕКСТЫ
+                    document.getElementById('p-title').innerText = data.title;
+                    document.getElementById('p-price').innerText = data.price;
+                    document.getElementById('p-ref').innerText = 'REF: ' + data.ref;
+                    document.title = `ANTI-NASTYA | ${data.title}`; 
+
+                    // 2. ОПИСАНИЕ
+                    const descContainer = document.querySelector('.p-description');
+                    if (data.description && data.description.trim() !== '') {
+                        descContainer.innerHTML = data.description.replace(/\n/g, '<br>');
+                    } else {
+                        descContainer.innerHTML = `<p>HEAVYWEIGHT FABRIC.<br>LIMITED EDITION.</p>`;
+                    }
+
+                    // 3. ГАЛЕРЕЯ
+                    const mainImg = document.getElementById('p-image');
+                    const galleryDiv = document.getElementById('p-gallery');
+                    let imagesList = []; 
+
+                    if (data.images && data.images.length > 0) {
+                        imagesList = data.images;
+                        mainImg.src = data.images[0]; 
+                        data.images.forEach((src, idx) => {
+                            const thumb = document.createElement('img');
+                            thumb.src = src;
+                            thumb.className = 'thumb-img';
+                            thumb.dataset.src = src; 
+                            thumb.onclick = () => { changeMainImage(src); };
+                            if (idx === 0) thumb.classList.add('active');
+                            galleryDiv.appendChild(thumb);
+                        });
+                    } else { mainImg.src = 'img/placeholder.jpg'; }
+
+                    function changeMainImage(src) {
+                        mainImg.src = src;
+                        document.querySelectorAll('.thumb-img').forEach(t => t.classList.remove('active'));
+                        const activeThumb = document.querySelector(`.thumb-img[data-src="${src}"]`);
+                        if (activeThumb) activeThumb.classList.add('active');
+                    }
+
+                    // 4. ЦВЕТА
+                    const colorsBlock = document.getElementById('colors-block');
+                    const colorsGrid = document.getElementById('colors-grid');
+                    if (data.colors && data.colors.length > 0) {
+                        colorsBlock.style.display = 'block'; 
+                        data.colors.forEach(col => {
+                            const btn = document.createElement('button');
+                            btn.className = 'size-btn';
+                            btn.innerText = col.trim();
+                            btn.onclick = () => {
+                                colorsGrid.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                                btn.classList.add('active');
+                                const colorParts = col.toLowerCase().trim().split(' '); 
+                                const matchingImage = imagesList.find(imgUrl => {
+                                    const lowerUrl = imgUrl.toLowerCase();
+                                    return colorParts.some(part => lowerUrl.includes(part));
+                                });
+                                if (matchingImage) changeMainImage(matchingImage);
+                            };
+                            colorsGrid.appendChild(btn);
+                        });
+                    }
+
+                    // 5. РАЗМЕРЫ
+                    const sizesBlock = document.getElementById('sizes-block');
+                    const sizesGrid = document.getElementById('sizes-grid');
+                    if (data.stock && data.stock.length > 0) {
+                        sizesBlock.style.display = 'block'; 
+                        data.stock.forEach(item => {
+                            const btn = document.createElement('button');
+                            btn.className = 'size-btn';
+                            btn.innerText = item.size;
+                            if (item.qty > 0) {
+                                btn.onclick = () => {
+                                    sizesGrid.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                                    btn.classList.add('active');
+                                };
+                            } else {
+                                btn.classList.add('disabled'); btn.disabled = true;
+                                btn.style.textDecoration = "line-through"; btn.style.opacity = "0.3"; btn.title = "SOLD OUT";
+                            }
+                            sizesGrid.appendChild(btn);
+                        });
+                    }
+
+                    // 6. ЛОГИКА КНОПКИ КУПИТЬ
+                    const cartBtn = document.querySelector('.add-to-cart-btn');
+                    
+                    if (data.isDrop) {
+                        // Если DROP - блокируем
+                        cartBtn.innerHTML = `<span>DROP COMING SOON</span> <span class="btn-decor">🔒</span>`;
+                        cartBtn.style.opacity = '0.5';
+                        cartBtn.style.cursor = 'not-allowed';
+                        cartBtn.disabled = true;
+                    } else {
+                        // ОБЫЧНЫЙ РЕЖИМ - ПОДКЛЮЧАЕМ КОРЗИНУ
+                        cartBtn.innerHTML = `<span>ADD TO CART</span> <span class="btn-decor">→</span>`;
+                        cartBtn.disabled = false;
+                        
+                        cartBtn.onclick = () => {
+                            // 1. Проверяем выбранный ЦВЕТ
+                            const activeColorBtn = document.querySelector('#colors-grid .size-btn.active');
+                            // Если цветов нет (массив пуст), ставим 'ONE COLOR', иначе требуем выбор
+                            let selectedColor = 'ONE COLOR';
+                            if (data.colors && data.colors.length > 0) {
+                                if (!activeColorBtn) {
+                                    alert('PLEASE SELECT A COLOR');
+                                    return;
+                                }
+                                selectedColor = activeColorBtn.innerText;
+                            }
+
+                            // 2. Проверяем выбранный РАЗМЕР
+                            const activeSizeBtn = document.querySelector('#sizes-grid .size-btn.active');
+                            let selectedSize = 'ONE SIZE';
+                            if (data.stock && data.stock.length > 0) {
+                                if (!activeSizeBtn) {
+                                    alert('PLEASE SELECT A SIZE');
+                                    return;
+                                }
+                                selectedSize = activeSizeBtn.innerText;
+                            }
+
+                            // 3. Отправляем в корзину (Функция из main.js)
+                            // Передаем объект товара + выбранные опции
+                            const productToAdd = {
+                                id: data.id,
+                                title: data.title,
+                                price: data.price,
+                                image: data.images[0] || 'img/placeholder.jpg'
+                            };
+                            
+                            addToCart(productToAdd, selectedSize, selectedColor);
+                        };
+                    }
+
+                    // 7. === ЛОГИКА DROP MODE (НОВОЕ!) ===
+                    
+                    if (data.isDrop) {
+                        // Если режим DROP — блокируем кнопку
+                        cartBtn.innerHTML = `<span>DROP COMING SOON</span> <span class="btn-decor">🔒</span>`;
+                        cartBtn.style.opacity = '0.5';
+                        cartBtn.style.cursor = 'not-allowed';
+                        cartBtn.style.background = '#333';
+                        cartBtn.style.color = '#888';
+                        cartBtn.disabled = true;
+                        
+                        // Удаляем обработчики клика (на всякий случай)
+                        cartBtn.onclick = (e) => e.preventDefault();
+                    } else {
+                        // Обычный режим
+                        cartBtn.innerHTML = `<span>ADD TO CART</span> <span class="btn-decor">→</span>`;
+                        cartBtn.disabled = false;
+                        // Сюда потом добавим логику корзины
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('p-title').innerText = "PRODUCT NOT FOUND";
+                });
+        } else {
+            document.getElementById('p-title').innerText = "ERROR: NO ID PROVIDED";
+        }
+    </script>
+
+    <div class="cart-overlay-bg" id="cart-overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <span>YOUR CART (<span id="cart-count-header">0</span>)</span>
+            <button class="close-cart" onclick="toggleCart()">×</button>
+        </div>
+        
+        <div class="cart-items" id="cart-items-container">
+            </div>
+
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>TOTAL:</span>
+                <span id="cart-total-price">0₴</span>
+            </div>
+            <button class="checkout-btn" onclick="window.location.href='checkout.html'">CHECKOUT</button>
+        </div>
+    </div>
+</body>
+</html>

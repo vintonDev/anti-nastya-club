@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status | ANTI-NASTYA</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Стили для страницы статуса */
+        body.product-page {
+            /* Переопределяем высоту для скролла, если нужно */
+            height: auto;
+            min-height: 100vh;
+        }
+
+        /* Адаптивные стили для формы и контейнера */
+        .status-container {
+            flex-direction: column;
+            min-height: 80vh;
+            max-width: 800px;
+            margin: 0 auto;
+            padding-top: 150px;
+        }
+
+        .status-badge { 
+            padding: 8px 15px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            font-size: 1.2rem; 
+            display: inline-block;
+            font-family: monospace; /* Для стиля */
+            border-radius: 2px;
+        }
+        
+        /* Цвета статусов (должны быть в style.css, но для гарантии) */
+        .st-new { background: #ff0000; color: #fff; }
+        .st-sent { background: #0088ff; color: #fff; }
+        .st-done { background: #00ff41; color: #000; }
+        .st-cancelled { background: #555; color: #ccc; text-decoration: line-through; } 
+        
+        .order-result-card {
+            padding: 40px; 
+            border: 1px solid #333; 
+            margin-bottom: 50px;
+            background: #0a0a0a;
+        }
+        
+        /* Стили для полей ввода */
+        .form-group.input {
+            width: 100%; 
+            padding: 15px; 
+            font-size: 1.1rem; 
+            text-align: center; 
+            margin-bottom: 20px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Стили для кнопки (унаследованы от add-to-cart-btn) */
+        .status-check-btn {
+            max-width: none; 
+            width: 100%;
+            padding: 20px;
+            background: transparent;
+            border: 1px solid #fff;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: none;
+            display: flex;
+            justify-content: space-between;
+            transition: all 0.2s;
+            pointer-events: auto;
+        }
+        .status-check-btn:hover { background: #fff; color: #000; transform: scale(1.02); }
+
+
+    </style>
+</head>
+<body class="product-page">
+    
+    <div class="cursor-data">
+        <div class="cursor-crosshair"></div>
+        <div class="cursor-xy">X: 000 <br> Y: 000</div>
+    </div>
+
+    <div class="noise-overlay"></div>
+    
+    <header class="main-header">
+        <div class="nav-group left">
+            <a href="index.html" class="nav-btn">HOME</a>
+            <a href="shop.html" class="nav-btn">SHOP</a>
+        </div>
+        <div class="logo-container">
+            <a href="index.html"><img src="logo.png" alt="ANTI-NASTYA" class="site-logo"></a>
+        </div>
+        <div class="nav-group right">
+            <a href="#" class="nav-btn" onclick="toggleCart(); return false;">CART (0)</a> 
+            <a href="status.html" class="nav-btn active">STATUS</a>
+        </div>
+    </header>
+
+    <div class="product-detail-container status-container">
+        
+        <h1 class="p-title" style="text-align: center; margin-bottom: 40px; font-size: 2.5rem;">ORDER STATUS CHECK</h1>
+
+        <div style="margin: 0 auto 50px; max-width: 400px; width: 100%;">
+            <div class="option-label" style="text-align: center;">Введите номер заказа (например, 1001)</div>
+            <input type="text" id="order-id-input" placeholder="ORDER ID" class="form-group input">
+            <button class="status-check-btn" onclick="checkOrderStatus()">
+                <span>CHECK STATUS</span>
+                <span>[SCAN]</span>
+            </button>
+            <p id="error-message" style="color: #ff0000; text-align: center; margin-top: 20px; font-family: monospace;"></p>
+        </div>
+
+        <div id="order-result" class="order-result-card" style="display: none;">
+            <h2 style="font-size: 1.5rem; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
+                ORDER #<span id="order-display-id"></span> for <span id="customer-name"></span>
+            </h2>
+            
+            <div style="margin-bottom: 30px;">
+                <div class="option-label">CURRENT STATUS:</div>
+                <span id="order-status-badge"></span>
+            </div>
+
+            <div class="option-label" style="margin-bottom: 10px;">ORDER ITEMS:</div>
+            <ul id="order-items-list" style="list-style: none; padding: 0; margin: 0;">
+                </ul>
+            
+            <div class="p-footer" style="margin-top: 30px;">
+                <span>TOTAL:</span>
+                <span id="order-total" style="color: #fff; font-size: 1rem;"></span>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="main.js"></script>
+
+    <script>
+        // Функция для получения класса стиля статуса
+        function getStatusClass(status) {
+            switch (status) {
+                case 'new': return { label: 'NEW', class: 'st-new' };
+                case 'sent': return { label: 'SENT', class: 'st-sent' };
+                case 'done': return { label: 'DONE', class: 'st-done' };
+                case 'cancelled': return { label: 'CANCElLED', class: 'st-cancelled' };
+                default: return { label: status.toUpperCase(), class: 'st-new' };
+            }
+        }
+
+        async function checkOrderStatus() {
+            const orderIdInput = document.getElementById('order-id-input');
+            // Используем только digits, чтобы избежать ошибок парсинга
+            const orderId = orderIdInput.value.trim().replace(/[^0-9]/g, ''); 
+            const resultContainer = document.getElementById('order-result');
+            const errorElement = document.getElementById('error-message');
+            
+            errorElement.textContent = '';
+            resultContainer.style.display = 'none';
+
+            if (!orderId || isNaN(parseInt(orderId))) {
+                errorElement.textContent = 'Пожалуйста, введите корректный номер заказа.';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/order/status/${orderId}`);
+                
+                if (!response.ok) {
+                    const data = await response.json();
+                    errorElement.textContent = data.error || `Ошибка ${response.status}: Заказ #${orderId} не найден.`;
+                    return;
+                }
+
+                const data = await response.json();
+
+                // --- Заказ найден, отображаем данные ---
+                const statusInfo = getStatusClass(data.status);
+                
+                // 1. Статус
+                const statusBadge = document.getElementById('order-status-badge');
+                statusBadge.textContent = statusInfo.label;
+                statusBadge.className = 'status-badge ' + statusInfo.class; // Применяем класс для цвета
+
+                // 2. Основная информация
+                document.getElementById('order-display-id').textContent = data.id;
+                document.getElementById('customer-name').textContent = data.customerName;
+                document.getElementById('order-total').textContent = data.total; // Отображаем сумму с валютой
+
+                // 3. Список товаров
+                const itemsList = document.getElementById('order-items-list');
+                itemsList.innerHTML = ''; 
+                
+                data.items.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.style.marginBottom = '8px';
+                    listItem.style.display = 'flex';
+                    listItem.style.justifyContent = 'space-between';
+                    listItem.style.fontFamily = 'monospace'; 
+                    
+                    const quantity = item.qty || 1; 
+                    
+                    // Убеждаемся, что color и size существуют
+                    const size = item.size ? item.size.toUpperCase() : 'N/A';
+                    const color = item.color ? item.color.toUpperCase() : 'N/A';
+
+                    const name = `${item.title} (${size} / ${color})`;
+                    const priceQty = `${item.price} x ${quantity}`;
+                    
+                    listItem.innerHTML = `
+                        <span style="color: #ccc;">${name}</span>
+                        <span style="color: #888;">${priceQty}</span>
+                    `;
+                    itemsList.appendChild(listItem);
+                });
+
+                resultContainer.style.display = 'block';
+
+            } catch (e) {
+                console.error('Fetch/Parsing error:', e); 
+                errorElement.textContent = 'Произошла ошибка при обработке данных. Проверьте консоль F12.';
+            }
+        }
+        
+        // Автоматическая проверка при загрузке, если ID передан в URL (например, из email)
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (id) {
+                document.getElementById('order-id-input').value = id;
+                checkOrderStatus();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTI-NASTYA CLUB</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div class="vignette"></div>
+    <div class="cursor-data">
+        <div class="cursor-crosshair"></div>
+        <div class="cursor-xy">X: 000 <br> Y: 000</div>
+    </div>
+
+
+    <header class="main-header">
+        <div class="nav-group left">
+            <a href="shop.html" class="nav-btn">SHOP</a>
+            <a href="#" class="nav-btn">LOOKBOOK</a>
+        </div>
+
+        <div class="logo-container">
+            <img src="logo.png" alt="Logo" class="site-logo">
+        </div>
+
+        <div class="nav-group right">
+            <a href="#" class="nav-btn">ABOUT</a>
+            <a href="#" class="nav-btn" id="nav-cart-btn" onclick="toggleCart(); return false;">CART (0)</a>
+        </div>
+    </header>
+
+    <div class="info-layer">
+        <div class="collection-status">SEASON 1 / DROP 001</div>
+
+        <div class="product-info-bottom">
+            <div class="info-item left">
+                <span class="label">ITEM:</span>
+                <span class="value">OVERSIZED T-SHIRT BLACK</span>
+            </div>
+            <div class="info-item right">
+                <span class="label">PRICE:</span>
+                <span class="value">1200₴</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="side-interface">
+        
+        <div class="side-col left">
+            <div class="vertical-line"></div>
+            <div class="vertical-text">EST. 2024 © ANTI-NASTYA CLUB</div>
+            <div class="vertical-line"></div>
+        </div>
+
+        <div class="side-col right">
+            <div class="barcode">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="vertical-text specs">
+                SPEC: COTTON 100%<br>
+                HEAVYWEIGHT<br>
+                REF: 004-992
+            </div>
+        </div>
+    </div>
+    <div id="text-wall" class="background-text"></div>
+
+    <div id="text-wall" class="background-text"></div>
+
+    <div class="product-container">
+        <canvas id="tshirt-canvas"></canvas>
+    </div>
+
+    <div class="mobile-info">
+        <div class="mobile-label">ITEM:</div>
+        <h1 class="mobile-title">OVERSIZED T-SHIRT BLACK</h1>
+        <div class="mobile-label">PRICE:</div>
+        <div class="mobile-price">1200₴</div>
+    </div>
+
+    <script src="main.js"></script>
+
+    <div class="cart-overlay-bg" id="cart-overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <span>YOUR CART (<span id="cart-count-header">0</span>)</span>
+            <button class="close-cart" onclick="toggleCart()">×</button>
+        </div>
+        
+        <div class="cart-items" id="cart-items-container">
+            </div>
+
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>TOTAL:</span>
+                <span id="cart-total-price">0₴</span>
+            </div>
+            <button class="checkout-btn" onclick="window.location.href='checkout.html'">CHECKOUT</button>
+        </div>
+    </div>
+</body>
+</html>
