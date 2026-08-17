@@ -21,3 +21,5 @@ A custom-built e-commerce platform for Anti-Nastya Club, featuring a heavy focus
 2. Install dependencies: `npm install`
 3. Launch server: `node server.js` (or `npm start`)
 4. Access the store at `http://localhost:3000`
+
+Note: Admin dashboard and order management functions are available in the local development environment due to SQLite database hosting constraints on Vercel.
