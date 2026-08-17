@@ -102,7 +102,8 @@ if (canvas) {
                 const paddedNum = String(frameNum).padStart(4, '0');
                 
                 // Формируем путь
-                img.src = `${part.folder}${part.fileNamePrefix}${paddedNum}${part.fileExtension}`;
+                const CDN_BASE = 'https://cdn.jsdelivr.net/gh/vintonDev/anti-nastya-club@main';
+                img.src = `${CDN_BASE}${part.folder}${part.fileNamePrefix}${paddedNum}${part.fileExtension}`;
                 
                 img.onload = () => {
                     framesLoaded++;
