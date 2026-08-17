@@ -916,3 +916,29 @@ a.product-card .card-meta {
 .cart-sidebar .checkout-btn {
     cursor: none !important;
 }
+
+/* Пока идет загрузка, скрываем контент, оставляем только шапку с лого */
+body.is-loading .background-text,
+body.is-loading .product-container canvas,
+body.is-loading .mobile-info,
+body.is-loading .side-interface,
+body.is-loading .info-layer {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+/* Плавное появление контента после загрузки */
+.background-text, .product-container canvas, .mobile-info, .side-interface, .info-layer {
+    transition: opacity 0.5s ease;
+}
+
+/* Отключаем кастомный курсор на мобильных устройствах */
+@media (max-width: 768px) {
+    .cursor-data {
+        display: none !important;
+    }
+    body, a, button, .nav-btn, .product-card {
+        cursor: auto !important;
+    }
+}

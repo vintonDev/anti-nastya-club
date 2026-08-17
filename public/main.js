@@ -123,6 +123,7 @@ if (canvas) {
                     if (framesLoaded === totalFramesToLoad) {
                         const loader = document.getElementById('loader');
                         if (loader) loader.style.display = 'none';
+                        document.body.classList.remove('is-loading');
                         startPlayback();
                     }
                 };
