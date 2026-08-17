@@ -108,14 +108,14 @@ if (canvas) {
                     framesLoaded++;
                     
                     // Как только загрузили первую картинку - задаем размеры канваса
-                    if (canvas.width === 0 || canvas.width === 300) { 
-                        canvas.width = img.naturalWidth;
-                        canvas.height = img.naturalHeight;
-                        setTimeout(generateTextWall, 100);
-                    }
+                    const progress = Math.round((framesLoaded / totalFramesToLoad) * 100);
+                    const progressEl = document.getElementById('load-progress');
+                    if (progressEl) progressEl.innerText = progress;
 
-                    // Если все загрузилось - старт
+                    // Как только загрузили все - скрываем лоадер
                     if (framesLoaded === totalFramesToLoad) {
+                        const loader = document.getElementById('loader');
+                        if (loader) loader.style.display = 'none';
                         startPlayback();
                     }
                 };
