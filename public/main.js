@@ -42,11 +42,10 @@ if (canvas) {
     // === ТВОИ НАСТРОЙКИ ===
     const SETTINGS = {
         // === НАСТРОЙКИ КАРТИНОК ===
-        // Важно: Убедись, что папки называются именно так в папке public!
         sequenceParts: [
             // ПАПКА 1 (Интро)
             { 
-                folder: '/black sequence/', // Если не переименовал, верни старое название
+                folder: '/black_sequence/',
                 fileNamePrefix: 'frame',    
                 fileExtension: '.png',      
                 totalFiles: 221,   
@@ -55,7 +54,7 @@ if (canvas) {
             },
             // ПАПКА 2 (Цикл)
             { 
-                folder: '/rotating black sequence/', // Если не переименовал, верни старое название
+                folder: '/rotating_black_sequence/', 
                 fileNamePrefix: 'frame',    
                 fileExtension: '.png',
                 totalFiles: 221,   
