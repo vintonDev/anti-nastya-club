@@ -45,7 +45,7 @@ if (canvas) {
         sequenceParts: [
             // ПАПКА 1 (Интро)
             { 
-                folder: '/black_sequence/',
+                folder: '/public/black_sequence/',
                 fileNamePrefix: 'frame',    
                 fileExtension: '.png',      
                 totalFiles: 221,   
@@ -54,7 +54,7 @@ if (canvas) {
             },
             // ПАПКА 2 (Цикл)
             { 
-                folder: '/rotating_black_sequence/', 
+                folder: '/public/rotating_black_sequence/', 
                 fileNamePrefix: 'frame',    
                 fileExtension: '.png',
                 totalFiles: 221,   
