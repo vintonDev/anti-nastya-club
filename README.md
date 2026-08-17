@@ -1,6 +1,6 @@
 # Anti-Nastya Club - Interactive Web
 
-[**Live Demo**](ТВОЯ_ССЫЛКА_НА_VERCEL) | [**Video Breakdown**](https://www.youtube.com/watch?v=feMVw6S6xXU)
+[**Live Demo**](https://anti-nastya-club.vercel.app) | [**Video Breakdown**](https://www.youtube.com/watch?v=feMVw6S6xXU)
 
 ### 🚀 Overview
 A custom-built e-commerce platform for Anti-Nastya Club, featuring a heavy focus on interactive visual storytelling and high-performance 2D canvas animation. Designed to deliver an immersive streetwear shopping experience with a custom frame-sequence rendering engine and a Node.js-powered backend.
@@ -17,7 +17,7 @@ A custom-built e-commerce platform for Anti-Nastya Club, featuring a heavy focus
 *   **State & Cart Flow:** Engineered a robust client-side state management system for cart operations, variant selections (sizes/colors), and real-time total calculations.
 
 ### ⚙️ How to run locally
-1. Clone the repo: `git clone <url>`
+1. Clone the repo: `git clone https://github.com/vintonDev/anti-nastya-club.git`
 2. Install dependencies: `npm install`
-3. Launch server: `node server.js`
+3. Launch server: `node server.js` (or `npm start`)
 4. Access the store at `http://localhost:3000`
