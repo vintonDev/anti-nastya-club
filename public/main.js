@@ -106,13 +106,20 @@ if (canvas) {
                 
                 img.onload = () => {
                     framesLoaded++;
+
+                    // 1. Устанавливаем размеры канваса по первой загруженной картинке
+                    if (canvas.width === 0 || canvas.width === 300) { 
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        setTimeout(generateTextWall, 100);
+                    }
                     
-                    // Как только загрузили первую картинку - задаем размеры канваса
+                    // 2. Обновляем прогресс-бар лоадера
                     const progress = Math.round((framesLoaded / totalFramesToLoad) * 100);
                     const progressEl = document.getElementById('load-progress');
                     if (progressEl) progressEl.innerText = progress;
 
-                    // Как только загрузили все - скрываем лоадер
+                    // 3. Когда всё скачалось — убираем лоадер и запускаем плеер
                     if (framesLoaded === totalFramesToLoad) {
                         const loader = document.getElementById('loader');
                         if (loader) loader.style.display = 'none';
